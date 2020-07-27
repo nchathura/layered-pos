@@ -12,6 +12,22 @@ import java.util.List;
 
 public class DataLayer {
 
+    public static String getLastCustomerId(){
+        try {
+            Connection connection = DBConnection.getInstance().getConnection();
+            Statement stm = connection.createStatement();
+            ResultSet rst = stm.executeQuery("SELECT * FROM Customer ORDER BY id DESC  LIMIT 1");
+            if (rst.next()){
+                return rst.getString(1);
+            }else{
+                return null;
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return null;
+        }
+    }
+
     public static List<CustomerTM> getAllCustomers(){
         try {
             Connection connection = DBConnection.getInstance().getConnection();
