@@ -26,7 +26,7 @@ public class BusinessLogic {
     }
 
     public static boolean updateCustomer(String name, String address, String customerId){
-        return DataLayer.updateCustomer(new CustomerTM(name, address, customerId));
+        return DataLayer.updateCustomer(new CustomerTM(customerId, name, address));
     }
 
     public static List<ItemTM> getAllItems(){

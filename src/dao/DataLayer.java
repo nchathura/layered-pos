@@ -79,8 +79,8 @@ public class DataLayer {
             while (rst.next()){
                 items.add(new ItemTM(rst.getString(1),
                         rst.getString(2),
-                        rst.getInt(3),
-                        rst.getDouble(4)));
+                        rst.getInt(4),
+                        rst.getDouble(3)));
             }
             return items;
         } catch (SQLException throwables) {
@@ -96,7 +96,7 @@ public class DataLayer {
             pstm.setObject(1, item.getCode());
             pstm.setObject(2, item.getDescription());
             pstm.setObject(3, item.getQtyOnHand());
-            pstm.setObject(3, item.getUnitPrice());
+            pstm.setObject(4, item.getUnitPrice());
             return pstm.executeUpdate() > 0;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -149,9 +149,9 @@ public class DataLayer {
             for (OrderDetailTM orderDetail: orderDetails) {
                 pstm = connection.prepareStatement("INSERT INTO OrderDetail VALUES (?,?,?,?)");
                 pstm.setObject(1, order.getOrderId());
-                pstm.setObject(1, orderDetail.getCode());
-                pstm.setObject(1, orderDetail.getQty());
-                pstm.setObject(1, orderDetail.getUnitPrice());
+                pstm.setObject(2, orderDetail.getCode());
+                pstm.setObject(3, orderDetail.getQty());
+                pstm.setObject(4, orderDetail.getUnitPrice());
                 affectedRows = pstm.executeUpdate();
 
                 if (affectedRows == 0){
@@ -159,8 +159,9 @@ public class DataLayer {
                     return false;
                 }
 
-                pstm = connection.prepareStatement("UPDATE Item SET qtyOnHand = qtyOnHand - ? WHERE code= ?");
-                pstm.setObject(1, orderDetail.getQty());;
+                pstm = connection.prepareStatement("UPDATE Item SET qtyOnHand=qtyOnHand-? WHERE code=?");
+                pstm.setObject(1, orderDetail.getQty());
+                pstm.setObject(2, orderDetail.getCode());
                 affectedRows = pstm.executeUpdate();
 
                 if (affectedRows == 0){
