@@ -28,6 +28,23 @@ public class DataLayer {
         }
     }
 
+    public static String getLastItemID(){
+        try {
+            Statement stm = DBConnection.getInstance().getConnection().createStatement();
+            ResultSet rst = stm.executeQuery("SELECT code FROM Item ORDER BY code DESC LIMIT 1");
+            if (rst.next()){
+                return rst.getString(1);
+            }else{
+                return null;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     public static List<CustomerTM> getAllCustomers(){
         try {
             Connection connection = DBConnection.getInstance().getConnection();
@@ -203,5 +220,9 @@ public class DataLayer {
             }
         }
     }
+
+    //-------------------------Item Data Layer------------------
+
+
 
 }
