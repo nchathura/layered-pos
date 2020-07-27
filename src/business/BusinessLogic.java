@@ -17,16 +17,16 @@ public class BusinessLogic {
         return DataLayer.getAllCustomers();
     }
 
-    public static boolean saveCustomer(CustomerTM customer){
-        return DataLayer.saveCustomer(customer);
+    public static boolean saveCustomer(String id, String name, String address){
+        return DataLayer.saveCustomer(new CustomerTM(id,name,address));
     }
 
     public static boolean deleteCustomer(String customerId){
         return DataLayer.deleteCustomer(customerId);
     }
 
-    public static boolean updateCustomer(CustomerTM customer){
-        return DataLayer.updateCustomer(customer);
+    public static boolean updateCustomer(String name, String address, String customerId){
+        return DataLayer.updateCustomer(new CustomerTM(name, address, customerId));
     }
 
     public static List<ItemTM> getAllItems(){
