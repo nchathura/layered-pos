@@ -33,16 +33,16 @@ public class BusinessLogic {
         return DataLayer.getAllItems();
     }
 
-    public static boolean saveItem(ItemTM item){
-        return DataLayer.saveItem(item);
+    public static boolean saveItem(String code, String description, int qtyOnHand, double unitPrice){
+        return DataLayer.saveItem(new ItemTM(code, description, qtyOnHand, unitPrice));
     }
 
     public static boolean deleteItem(String itemCode){
         return DataLayer.deleteItem(itemCode);
     }
 
-    public static boolean updateItem(ItemTM item){
-        return DataLayer.updateItem(item);
+    public static boolean updateItem(String description, int qtyOnHand, double unitPrice, String itemCode){
+        return DataLayer.updateItem(new ItemTM(itemCode, description, qtyOnHand, unitPrice));
     }
 
     public static boolean placeOrder(OrderTM order, List<OrderDetailTM> orderDetails){
