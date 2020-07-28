@@ -1,6 +1,8 @@
 package dao;
 
 import db.DBConnection;
+import entity.Customer;
+import entity.Item;
 import util.CustomerTM;
 import util.ItemTM;
 import util.OrderDetailTM;
@@ -12,11 +14,12 @@ import java.util.List;
 
 public class DataLayer {
 
+
     public static String getLastCustomerId(){
         try {
             Connection connection = DBConnection.getInstance().getConnection();
             Statement stm = connection.createStatement();
-            ResultSet rst = stm.executeQuery("SELECT * FROM Customer ORDER BY id DESC  LIMIT 1");
+            ResultSet rst = stm.executeQuery("SELECT * FROM Customer ORDER BY id DESC LIMIT 1");
             if (rst.next()){
                 return rst.getString(1);
             }else{
@@ -104,22 +107,14 @@ public class DataLayer {
     }
 
     public static List<ItemTM> getAllItems(){
-        try {
-            Connection connection = DBConnection.getInstance().getConnection();
-            Statement stm = connection.createStatement();
-            ResultSet rst = stm.executeQuery("SELECT * FROM Item");
-            ArrayList<ItemTM> items = new ArrayList<>();
-            while (rst.next()){
-                items.add(new ItemTM(rst.getString(1),
-                        rst.getString(2),
-                        rst.getInt(4),
-                        rst.getDouble(3)));
-            }
-            return items;
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+
+        List<Item> allItem = ItemDAO.findAllItem();
+        List<ItemTM> items = new ArrayList<>();
+        for (Item item : allItem){
+            items.add(new ItemTM(item.getCode(), item.getDescription(), item.getQtyOnHand()));
+
         }
-        return null;
+        return items;
     }
 
     public static boolean saveItem(ItemTM item){
@@ -221,8 +216,54 @@ public class DataLayer {
         }
     }
 
-    //-------------------------Item Data Layer------------------
+    public static int placeOrder(OrderTM order) {
+        Connection connection = DBConnection.getInstance().getConnection();
+        int affectedRows=0;
+        try {
+            connection.setAutoCommit(false);
+            PreparedStatement pstm = connection.prepareStatement("INSERT INTO `Order` VALUES (?,?,?)");
+            pstm.setObject(1, order.getOrderId());
+            pstm.setObject(2, order.getOrderDate());
+            pstm.setObject(3, order.getCustomerId());
+            affectedRows = pstm.executeUpdate();
 
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return affectedRows;
 
+    }
+    public static int createOrderDetail(OrderTM order, List<OrderDetailTM> orderDetails) {
+        Connection connection = DBConnection.getInstance().getConnection();
+        int affectedRows = 0;
+        try {
+
+            for (OrderDetailTM orderDetail : orderDetails) {
+                PreparedStatement pstm = connection.prepareStatement("INSERT INTO OrderDetail VALUES (?,?,?,?)");
+                pstm.setObject(1, order.getOrderId());
+                pstm.setObject(2, orderDetail.getCode());
+                pstm.setObject(3, orderDetail.getQty());
+                pstm.setObject(4, orderDetail.getUnitPrice());
+                affectedRows = pstm.executeUpdate();
+
+                if (affectedRows == 0) {
+                    connection.rollback();
+                }
+                pstm = connection.prepareStatement("UPDATE Item SET qtyOnHand = qtyOnHand - ? WHERE code= ?");
+                pstm.setObject(1, orderDetail.getQty());;
+                affectedRows = pstm.executeUpdate();
+
+                if (affectedRows == 0){
+                    connection.rollback();
+                }
+            }
+            connection.commit();
+
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return affectedRows;
+    }
 
 }

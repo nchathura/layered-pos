@@ -7,7 +7,7 @@ public class ItemTM implements Cloneable{
     private int qtyOnHand;
     private double unitPrice;
 
-    public ItemTM() {
+    public ItemTM(String code, String description, int qtyOnHand) {
     }
 
     public ItemTM(String code, String description, int qtyOnHand, double unitPrice) {

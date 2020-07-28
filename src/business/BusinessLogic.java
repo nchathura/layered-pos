@@ -1,7 +1,9 @@
 package business;
 
 import dao.DataLayer;
+import dao.ItemDAO;
 import db.DBConnection;
+import entity.Item;
 import util.CustomerTM;
 import util.ItemTM;
 import util.OrderDetailTM;
@@ -70,7 +72,13 @@ public class BusinessLogic {
     }
 
     public static List<ItemTM> getAllItems(){
-        return DataLayer.getAllItems();
+        List<Item> allItems = ItemDAO.findAllItem();
+        List<ItemTM> itemTMS = new ArrayList<>();
+
+        for (Item allItem : allItems) {
+            itemTMS.add(new ItemTM(allItem.getCode(),allItem.getDescription(), (int) allItem.getUnitPrice().doubleValue(),allItem.getQtyOnHand()));
+        }
+        return itemTMS;
     }
 
     public static boolean saveItem(String code, String description, int qtyOnHand, double unitPrice){
@@ -89,5 +97,49 @@ public class BusinessLogic {
         return DataLayer.placeOrder(order, orderDetails);
     }
 
+    public static boolean placeOrder(OrderTM order){
+        Connection connection = DBConnection.getInstance().getConnection();
+        if (DataLayer.placeOrder(order) == 0){
 
+            try {
+                connection.rollback();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    connection.setAutoCommit(true);
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+            }
+            return false;
+        }
+        else {
+            try {
+                connection.commit();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+    }
+    public static boolean createOrderDetail(OrderTM order, List<OrderDetailTM> orderDetails) {
+        Connection connection = DBConnection.getInstance().getConnection();
+        if (DataLayer.createOrderDetail(order, orderDetails) == 0) {
+
+            try {
+                connection.rollback();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return false;
+        } else {
+            try {
+                connection.commit();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+    }
 }

@@ -258,7 +258,8 @@ public class PlaceOrderFormController {
         }
 
         boolean result = BusinessLogic.placeOrder(new OrderTM(lblId.getText(), LocalDate.now(), cmbCustomerId.getValue().getId(), cmbCustomerId.getValue().getName(),0),tblOrderDetails.getItems());
-        if (!result){
+        boolean resultOrderDetail = BusinessLogic.createOrderDetail(new OrderTM(lblId.getText(), LocalDate.now(), cmbCustomerId.getValue().getId(), cmbCustomerId.getValue().getName(),0),tblOrderDetails.getItems());
+        if (!result || !resultOrderDetail){
             new Alert(Alert.AlertType.ERROR, "Mudalali wade awul wage", ButtonType.OK).show();
             return;
         }
@@ -303,12 +304,7 @@ public class PlaceOrderFormController {
     private void generateOrderId() {
         // Generate a new id
         int maxId = 0;
-        /*for (Order order : ordersDB) {
-            int id = Integer.parseInt(order.getId().replace("OD", ""));
-            if (id > maxId) {
-                maxId = id;
-            }
-        }*/
+
         try {
             Statement stm = DBConnection.getInstance().getConnection().createStatement();
             ResultSet rst = stm.executeQuery("SELECT id FROM `Order` ORDER BY id DESC LIMIT 1");
@@ -374,5 +370,4 @@ public class PlaceOrderFormController {
             }
         }
     }
-
 }
