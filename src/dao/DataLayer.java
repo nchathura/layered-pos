@@ -1,7 +1,7 @@
 package dao;
 
+import dao.impl.ItemDAOImpl;
 import db.DBConnection;
-import entity.Customer;
 import entity.Item;
 import util.CustomerTM;
 import util.ItemTM;
@@ -106,16 +106,16 @@ public class DataLayer {
         }
     }
 
-    public static List<ItemTM> getAllItems(){
-
-        List<Item> allItem = ItemDAO.findAllItem();
-        List<ItemTM> items = new ArrayList<>();
-        for (Item item : allItem){
-            items.add(new ItemTM(item.getCode(), item.getDescription(), item.getQtyOnHand()));
-
-        }
-        return items;
-    }
+//    public static List<ItemTM> getAllItems(){
+//
+//        List<Item> allItem = ItemDAOImpl.findAllItems();
+//        List<ItemTM> items = new ArrayList<>();
+//        for (Item item : allItem){
+//            items.add(new ItemTM(item.getCode(), item.getDescription(), item.getQtyOnHand()));
+//
+//        }
+//        return items;
+//    }
 
     public static boolean saveItem(ItemTM item){
         try {
@@ -265,5 +265,6 @@ public class DataLayer {
         }
         return affectedRows;
     }
+
 
 }

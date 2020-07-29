@@ -1,11 +1,9 @@
 package entity;
 
-import java.math.BigDecimal;
-
 public class Item {
     private String code;
     private String description;
-    private BigDecimal unitPrice;
+    private double unitPrice;
     private int qtyOnHand;
 
     @Override
@@ -18,7 +16,7 @@ public class Item {
                 '}';
     }
 
-    public Item(String code, String description, BigDecimal unitPrice, int qtyOnHand) {
+    public Item(String code, String description, double unitPrice, int qtyOnHand) {
         this.setCode(code);
         this.setDescription(description);
         this.setUnitPrice(unitPrice);
@@ -44,11 +42,11 @@ public class Item {
         this.description = description;
     }
 
-    public BigDecimal getUnitPrice() {
+    public double getUnitPrice() {
         return unitPrice;
     }
 
-    public void setUnitPrice(BigDecimal unitPrice) {
+    public void setUnitPrice(double unitPrice) {
         this.unitPrice = unitPrice;
     }
 

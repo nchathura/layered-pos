@@ -8,7 +8,7 @@ public class Customer implements Serializable {
     private String address;
 
 
-    public Customer() {
+    public Customer(String customerId) {
     }
 
     public Customer(String id, String name, String address) {

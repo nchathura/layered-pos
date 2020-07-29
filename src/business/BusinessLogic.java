@@ -1,26 +1,30 @@
 package business;
 
-import dao.DataLayer;
-import dao.ItemDAO;
+import dao.*;
+import dao.impl.CustomerDAOImpl;
+import dao.impl.ItemDAOImpl;
+import dao.impl.OrderDAOImpl;
+import dao.impl.OrderDetailDAOImpl;
 import db.DBConnection;
-import entity.Item;
+import entity.*;
 import util.CustomerTM;
 import util.ItemTM;
 import util.OrderDetailTM;
 import util.OrderTM;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BusinessLogic {
 
-    public static String getNewCustomerId(){
-        String lastCustomerId = DataLayer.getLastCustomerId();
-        if (lastCustomerId == null){
+    public static String getNewCustomerId() {
+        String lastCustomerId = new CustomerDAOImpl().getLastCustomer();
+        if (lastCustomerId == null) {
             return "C001";
-        }else{
-           int maxId=  Integer.parseInt(lastCustomerId.replace("C",""));
+        } else {
+            int maxId = Integer.parseInt(lastCustomerId.replace("C", ""));
             maxId = maxId + 1;
             String id = "";
             if (maxId < 10) {
@@ -34,13 +38,13 @@ public class BusinessLogic {
         }
     }
 
-    public static String getNewItemId(){
+    public static String getNewItemId() {
 
 
         String lastItemId = DataLayer.getLastItemID();
-        if (lastItemId == null){
+        if (lastItemId == null) {
             return "I001";
-        }else{
+        } else {
             int maxCode = Integer.parseInt(lastItemId.replace("I", ""));
             maxCode = maxCode + 1;
             String code = "";
@@ -55,91 +59,128 @@ public class BusinessLogic {
         }
     }
 
-    public static List<CustomerTM> getAllCustomers(){
-        return DataLayer.getAllCustomers();
+    public static String getNewOrderId() {
+        OrderDetailDAO orderDetailDAO = new OrderDetailDAOImpl();
+        String oldID = orderDetailDAO.getLastOrderDetailID();
+        if (oldID == null) {
+            return "OD001";
+        } else {
+            int maxId = Integer.parseInt(oldID.replace("OD", ""));
+            maxId = maxId + 1;
+            String id = "";
+            if (maxId < 10) {
+                id = "OD00" + maxId;
+            } else if (maxId < 100) {
+                id = "OD0" + maxId;
+            } else {
+                id = "OD" + maxId;
+            }
+            return id;
+        }
     }
 
-    public static boolean saveCustomer(String id, String name, String address){
-        return DataLayer.saveCustomer(new CustomerTM(id,name,address));
+    public static List<CustomerTM> getAllCustomers() {
+        CustomerDAO customerDAO = new CustomerDAOImpl();
+
+        ArrayList<CustomerTM> allCustomerTMs = new ArrayList<>();
+
+        for (Customer customer : customerDAO.findAllCustomers()) {
+            allCustomerTMs.add(new CustomerTM(customer.getId(), customer.getName(), customer.getAddress()));
+
+
+        }
+        return allCustomerTMs;
     }
 
-    public static boolean deleteCustomer(String customerId){
-        return DataLayer.deleteCustomer(customerId);
+    public static boolean saveCustomer(String id, String name, String address) {
+        CustomerDAOImpl customerDAO = new CustomerDAOImpl();
+        return customerDAO.saveCustomer(new Customer(id, name, address));
     }
 
-    public static boolean updateCustomer(String name, String address, String customerId){
-        return DataLayer.updateCustomer(new CustomerTM(customerId, name, address));
+    public static boolean deleteCustomer(String customerId) {
+        CustomerDAOImpl customerDAO = new CustomerDAOImpl();
+        return customerDAO.deleteCustomer(new Customer(customerId));
     }
 
-    public static List<ItemTM> getAllItems(){
-        List<Item> allItems = ItemDAO.findAllItem();
+    public static boolean updateCustomer(String name, String address, String customerId) {
+        CustomerDAO customerDAO = new CustomerDAOImpl();
+        return customerDAO.updateCustomer(new Customer(customerId, name, address));
+    }
+
+    public static List<ItemTM> getAllItems() {
+        ItemDAO itemDAO = new ItemDAOImpl();
+        List<Item> allItems = itemDAO.findAllItem();
         List<ItemTM> itemTMS = new ArrayList<>();
 
         for (Item allItem : allItems) {
-            itemTMS.add(new ItemTM(allItem.getCode(),allItem.getDescription(), (int) allItem.getUnitPrice().doubleValue(),allItem.getQtyOnHand()));
+            itemTMS.add(new ItemTM(allItem.getCode(), allItem.getDescription(), allItem.getQtyOnHand(), allItem.getUnitPrice()));
         }
         return itemTMS;
     }
 
-    public static boolean saveItem(String code, String description, int qtyOnHand, double unitPrice){
-        return DataLayer.saveItem(new ItemTM(code, description, qtyOnHand, unitPrice));
+    public static boolean saveItem(String code, String description, int qtyOnHand, double unitPrice) {
+        ItemDAO itemDAO = new ItemDAOImpl();
+        return itemDAO.saveItem(
+                new Item(code, description, unitPrice, qtyOnHand));
     }
 
-    public static boolean deleteItem(String itemCode){
-        return DataLayer.deleteItem(itemCode);
+    public static boolean deleteItem(String itemCode) {
+        ItemDAO itemDAO = new ItemDAOImpl();
+        return itemDAO.deleteItem(itemCode);
     }
 
-    public static boolean updateItem(String description, int qtyOnHand, double unitPrice, String itemCode){
-        return DataLayer.updateItem(new ItemTM(itemCode, description, qtyOnHand, unitPrice));
+    public static boolean updateItem(String description, int qtyOnHand, double unitPrice, String itemCode) {
+        ItemDAO itemDAO = new ItemDAOImpl();
+        return itemDAO.updateItem(new Item(itemCode, description, unitPrice, qtyOnHand));
     }
 
-    public static boolean placeOrder(OrderTM order, List<OrderDetailTM> orderDetails){
-        return DataLayer.placeOrder(order, orderDetails);
-    }
 
-    public static boolean placeOrder(OrderTM order){
+    public static boolean placeOrder(OrderTM order, List<OrderDetailTM> orderDetails) {
         Connection connection = DBConnection.getInstance().getConnection();
-        if (DataLayer.placeOrder(order) == 0){
+        try {
+            OrderDAO orderDAO = new OrderDAOImpl();
+            connection.setAutoCommit(false);
 
-            try {
+            boolean result = orderDAO.saveOrder(order);
+            if (!result) {
                 connection.rollback();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    connection.setAutoCommit(true);
-                } catch (SQLException throwables) {
-                    throwables.printStackTrace();
+                return false;
+            }
+            for (OrderDetailTM orderDetail : orderDetails) {
+                OrderDetailDAO orderDetailDAO = new OrderDetailDAOImpl();
+                result = orderDetailDAO.saveOrder(new OrderDetail(new OrderDetailPK(order.getOrderId(), orderDetail.getCode()), orderDetail.getQty(), BigDecimal.valueOf(orderDetail.getUnitPrice())));
+                if (!result) {
+                    connection.rollback();
+                    return false;
                 }
-            }
-            return false;
-        }
-        else {
-            try {
+
+                ItemDAO itemDAO = new ItemDAOImpl();
+                result = itemDAO.updateItem(new Item(orderDetail.getCode(), orderDetail.getDescription(), Double.valueOf(orderDetail.getUnitPrice()), orderDetail.getQty()));
+                if (!result) {
+                    connection.rollback();
+                    return false;
+                }
+
                 connection.commit();
-            } catch (SQLException e) {
-                e.printStackTrace();
+
             }
             return true;
-        }
-    }
-    public static boolean createOrderDetail(OrderTM order, List<OrderDetailTM> orderDetails) {
-        Connection connection = DBConnection.getInstance().getConnection();
-        if (DataLayer.createOrderDetail(order, orderDetails) == 0) {
-
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
             try {
                 connection.rollback();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
             return false;
-        } else {
+        } finally {
             try {
-                connection.commit();
-            } catch (SQLException e) {
-                e.printStackTrace();
+                connection.setAutoCommit(true);
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
             }
-            return true;
         }
     }
+
+
 }
